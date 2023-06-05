@@ -14,8 +14,7 @@ namespace AlternativeLanguageProject
         {
             List<Cell> cellList = new List<Cell>();
             Dictionary<String, Cell> cellMap = new Dictionary<string, Cell>();
-            var path = Path.Combine(Directory.GetCurrentDirectory(),"\\cells.csv");
-            using (var reader = new StreamReader(@"path"))
+            using (var reader = new StreamReader(@"C:\Users\Aodhan\source\repos\AlternativeLanguageProject\cells.csv"))
             {
                 reader.ReadLine();
                 while (!reader.EndOfStream)
