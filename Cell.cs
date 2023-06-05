@@ -3,125 +3,229 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace AlternativeLanguageProject
 {
     class Cell
     {
-        String oem;
-        String model;
-        int launchAnnounced;
-        String launchStatus;
-        String bodyDimensions;
-        String bodyWeight;
-        String bodySim;
-        String displayType;
-        float displaySize;
-        String displayResolution;
-        String featuresSensors;
-        String platformOS;
+        public string Oem { get; protected set; }
+        public string Model { get; protected set; }
+        public int LaunchAnnounced { get; protected set; }
+        public string LaunchStatus { get; protected set; }
+        public string BodyDimensions { get; protected set; }
+        public float BodyWeight { get; protected set; }
+        public string BodySim { get; protected set; }
+        public string DisplayType { get; protected set; }
+        public float DisplaySize { get; protected set; }
+        public string DisplayResolution { get; protected set; }
+        public string FeaturesSensors { get; protected set; }
+        public string PlatformOS { get; protected set; }
 
         public Cell(String line)
         {
-            ParseLine(line); 
+            ParseLine(line);
         }
+
         
         public void ParseLine(String line)
         {
             CharEnumerator lineReader = line.GetEnumerator();
             int counter = 0;
             String cur = "";
-            char currentChar = lineReader.Current;
+            
             List<String> variableList = new List<String>();
-            variableList.Add(oem);
-            variableList.Add(model);
-           
-            variableList.Add(bodyDimensions);
-
-            while (!currentChar.Equals('\n'))
+            while (lineReader.MoveNext())
             {
-                while (!currentChar.Equals(','))
+                char currentChar = lineReader.Current;
+                char expect = ',';
+                if (currentChar.Equals('\"')){
+                    expect = '\"';
+                    if (lineReader.MoveNext())
+                    {
+                        currentChar = lineReader.Current;
+                    }  
+                }
+                while (!currentChar.Equals(expect))
                 {
                     if (currentChar.Equals('\n'))
                     {
                         break;
                     }
                     cur += currentChar;
-                    lineReader.MoveNext();
+                    if (!lineReader.MoveNext())
+                    {
+                        break;
+                    }
+                    currentChar = lineReader.Current;
                 }
                 switch (counter)
                 {
 
-                    //cases with differences. 2,3
                     default:
                         String varToChange;
-                        
-                        if (cur.Equals(""))
+
+                        if (cur.Equals("") || cur.Equals("-"))
                         {
-                            varToChange = null;
+                            varToChange = "NoVal";
                         }
                         else
                         {
                             varToChange = cur;
                         }
+                        variableList.Add(varToChange);
                         break;
                     case 2:
-                        launchAnnounced = GetYearFromString(cur);
+                        LaunchAnnounced = GetYearFromString(cur);
                         break;
                     case 3:
-                        if(cur.Equals("Discontinued") || cur.Equals("Cancelled"))
+                        if (cur.Equals("Discontinued") || cur.Equals("Cancelled"))
                         {
-                            launchStatus = cur;
+                            LaunchStatus = cur;
                         }
                         else
                         {
                             int ans = GetYearFromString(cur);
-                            if(ans == -1)
+                            if (ans == -1)
                             {
-                                launchStatus = null;
+                                LaunchStatus = "NoVal";
                             }
                             else
                             {
-                                launchStatus = ans.ToString();
-                            };
+                                LaunchStatus = ans.ToString();
+                            }
                         }
                         break;
-                    case 4:
-
+                    case 5:
+                        BodyWeight = GetGramsFromString(cur);
                         break;
-
+                    case 6:
+                        Regex regex = new Regex(@"^[a-zA-Z]+$");
+                        if (cur.Equals("No") || cur.Equals("Yes"))
+                        {
+                            BodySim = "noVal";
+                        }
+                        else if (regex.Match(cur).Success)
+                        {
+                            BodySim = cur;
+                        }
+                        else
+                        {
+                            BodySim = "NoVal";
+                        }
+                        break;
+                    case 8:
+                        regex = new Regex(@"^\d+(\.\d+)? inches$");
+                        Regex regex2 = new Regex(@"\d+(\.\d+)?");
+                        if (regex.Match(cur).Success)
+                        {
+               
+                            String toAssign = regex.Match(cur).Value;
+                            toAssign = regex2.Match(toAssign).Value;
+                            DisplaySize = float.Parse(toAssign);
+                        }
+                        else
+                        {
+                            DisplaySize = -1;
+                        }
+                        break;
+                    case 10:
+                        regex = new Regex(@"^(?=.*[a-zA-Z])(?=.*\d?)[a-zA-Z\d]+$");
+                        if (regex.Match(cur).Success)
+                        {
+                            FeaturesSensors = cur;
+                        }
+                        else
+                        {
+                            FeaturesSensors = "NoVal";
+                        }
+                        break;
+                    case 11:
+                        regex = new Regex(@"^[a-zA-Z\d. ]+$,?");
+                        if (regex.Match(cur).Success)
+                        {
+                            PlatformOS = regex.Match(cur).ToString();
+                        }
+                        else
+                        {
+                            PlatformOS = "NoVal";
+                        }
+                        break;
+                        
+                }
+                if (expect.Equals('\"'))
+                {
+                    lineReader.MoveNext();
                 }
                 cur = "";
+                counter++;
             }
+            Oem = variableList[0];
+            Model = variableList[1];
+            BodyDimensions = variableList[2];
+            DisplayType = variableList[3];
+            DisplayResolution = variableList[4]; 
+
+        }
+
+
+        public override string ToString()
+        {
+
+            string fullName = Oem + " " + Model;
+            string toReturn = fullName;
+            if(LaunchAnnounced != -1 && LaunchStatus != "NoVal")
+            {
+                toReturn += "\n" + "Year Announced (Launch Status): " + LaunchAnnounced + "(" + LaunchStatus + ")" + "\n";
+            }
+            if(BodyWeight != -1 && BodyDimensions != "NoVal")
+            {
+                toReturn += "Weight, Dimensions: " + BodyWeight + ", " + BodyDimensions + "\n";
+            }
+            if(DisplayType != "NoVal" && DisplayResolution != "NoVal" && DisplaySize != -1)
+            {
+                toReturn += "Display Type, Size, Resolution: " + DisplayType + "," + DisplaySize + "," + DisplayResolution + "\n";
+            }
+            if(BodySim != "NoVal" && PlatformOS != "NoVal")
+            {
+                toReturn += "Sim Type - Operating System: " + BodySim + " - " + PlatformOS;
+            }
+
+            return toReturn + "\n";
+                
+           
+
+            
         }
 
         public int GetYearFromString(String s)
         {
-            CharEnumerator ch = s.GetEnumerator();
+            Regex regex = new Regex(@"\b\d{4}\b");
             int ans;
-            String nums = "";
-            char c = ch.Current;
-            if(int.TryParse(ch.Current.ToString(),out ans))
+            string q = "z";
+            if (regex.Match(s).Success)
             {
-                nums += ch.Current;
+                q = regex.Match(s).ToString();
             }
-            while (ch.MoveNext())
-            {
-                if(int.TryParse(ch.Current.ToString(),out ans))
-                {
-                    nums += ch.Current;
-                }
-            }
-            if (int.TryParse(s, out ans) && (ans > 999 && ans < 10000))
+            if (int.TryParse(q, out ans))
             {
                 return ans;
             }
             return -1;
         }
 
-        public float SetDisplaySize(String s)
+        public float GetGramsFromString(String s)
         {
-
+            Regex validWeight = new Regex(@"\d+\s*[g]{1}");
+            Regex weightNoG = new Regex(@"\d+");
+            if (validWeight.IsMatch(s))
+            {
+                return float.Parse(weightNoG.Match(validWeight.Match(s).ToString()).ToString());
+            }
+            else
+            {
+                return -1;
+            }
         }
     }
 }
