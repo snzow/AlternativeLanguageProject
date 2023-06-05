@@ -13,5 +13,6 @@ check out unit testing.
 The main thing I used from a library was regex which proved incredibly useful. Other than that I don't think I really used any and I don't even know if that counts.
 
 ## Findings
-Average Display Size: 2.72 Inches
+Average Display Size: 2.72 Inches 
+
 Year with most phones launched: 2019
