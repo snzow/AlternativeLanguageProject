@@ -14,6 +14,7 @@ namespace AlternativeLanguageProject
         {
             List<Cell> cellList = new List<Cell>();
             Dictionary<String, Cell> cellMap = new Dictionary<string, Cell>();
+            //couldnt figure out how to do the relative path, just instert yours here
             using (var reader = new StreamReader(@"C:\Users\Aodhan\source\repos\AlternativeLanguageProject\cells.csv"))
             {
                 reader.ReadLine();
