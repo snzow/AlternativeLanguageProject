@@ -93,7 +93,5 @@ namespace AlternativeLanguageProject
             }
             return bigYear;
         }
-
-        
     }
 }
